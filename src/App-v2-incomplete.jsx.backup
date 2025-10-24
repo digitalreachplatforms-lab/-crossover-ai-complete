@@ -1,0 +1,929 @@
+import { useState } from 'react'
+import { Button } from '@/components/ui/button.jsx'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
+import { Input } from '@/components/ui/input.jsx'
+import { Label } from '@/components/ui/label.jsx'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group.jsx'
+import { Textarea } from '@/components/ui/textarea.jsx'
+import { Progress } from '@/components/ui/progress.jsx'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
+import { CheckCircle2, Circle, Download, ArrowRight, ArrowLeft, FileText, Wrench, Rocket, AlertCircle, CheckSquare, Loader2 } from 'lucide-react'
+import './App.css'
+
+function App() {
+  const [currentStage, setCurrentStage] = useState(0)
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState({})
+  const [showPackage, setShowPackage] = useState(false)
+  const [currentFlow, setCurrentFlow] = useState('discovery') // 'discovery', 'proposal', 'tom', 'implementation'
+
+  // Conversation stages
+  const stages = [
+    { id: 0, title: "Discovery & Rapport", icon: "👋" },
+    { id: 1, title: "Diagnostic", icon: "🔍" },
+    { id: 2, title: "Desired Outcomes", icon: "🎯" },
+    { id: 3, title: "Resources & Constraints", icon: "💰" },
+    { id: 4, title: "Solution Mapping", icon: "🛠️" },
+    { id: 5, title: "Objections", icon: "💬" },
+    { id: 6, title: "Commitment", icon: "✅" },
+    { id: 7, title: "Follow-Up", icon: "📧" }
+  ]
+
+  // All questions organized by stage - UPDATED WITH DROPDOWNS
+  const questions = [
+    // Stage 0: Discovery & Rapport
+    [
+      { 
+        id: 'name', 
+        type: 'select', 
+        label: "What's your name?", 
+        required: true,
+        options: ['John Smith', 'Jane Doe', 'Michael Johnson', 'Sarah Williams', 'David Brown', 'Emily Davis', 'Other (type below)'],
+        allowCustom: true
+      },
+      { id: 'email', type: 'email', label: "What's your best email address?", required: true },
+      { id: 'phone', type: 'tel', label: "What's your phone number?", required: true },
+      { 
+        id: 'businessName', 
+        type: 'select', 
+        label: "What's your business name?", 
+        required: true,
+        options: ['ABC Consulting', 'XYZ Services', 'Premier Solutions', 'Elite Group', 'Pro Services', 'Other (type below)'],
+        allowCustom: true
+      },
+      { 
+        id: 'role', 
+        type: 'select', 
+        label: "What's your role or title?", 
+        required: true,
+        options: ['Owner', 'CEO', 'Managing Director', 'Operations Manager', 'Sales Manager', 'Marketing Manager', 'Other']
+      },
+      { 
+        id: 'industry', 
+        type: 'select', 
+        label: "What type of business or industry are you in?", 
+        required: true,
+        options: [
+          'Professional Services (Consulting, Legal, Accounting)',
+          'Healthcare & Wellness',
+          'Real Estate',
+          'Home Services (Plumbing, HVAC, Contractors)',
+          'Retail & E-commerce',
+          'Fitness & Coaching',
+          'Beauty & Spa',
+          'Financial Services',
+          'Technology & IT Services',
+          'Other'
+        ]
+      },
+      { 
+        id: 'targetCustomer', 
+        type: 'select', 
+        label: "Who's your target customer or ideal client?", 
+        required: true,
+        options: [
+          'Small business owners',
+          'Enterprise/Corporate clients',
+          'Individual consumers',
+          'Healthcare professionals',
+          'Real estate agents/investors',
+          'Homeowners',
+          'Other businesses (B2B)',
+          'Other'
+        ]
+      },
+    ],
+    // Stage 1: Diagnostic
+    [
+      { 
+        id: 'mainFrustration', 
+        type: 'select', 
+        label: "What's the biggest frustration or bottleneck in your business right now?", 
+        required: true,
+        options: [
+          'Not enough leads coming in',
+          'Leads not converting to customers',
+          'Too much manual work/no automation',
+          'Poor follow-up with prospects',
+          'Missed calls and opportunities',
+          'Inconsistent revenue',
+          'Can\'t scale the business',
+          'Other'
+        ]
+      },
+      { 
+        id: 'holdingBack', 
+        type: 'select', 
+        label: "What do you feel is currently holding your business back from growing faster?", 
+        required: true,
+        options: [
+          'Lack of automation',
+          'No clear sales process',
+          'Limited online presence',
+          'Not enough time',
+          'Budget constraints',
+          'Technical challenges',
+          'Competition',
+          'Other'
+        ]
+      },
+      { 
+        id: 'leadHandling', 
+        type: 'radio', 
+        label: "Are you losing potential customers because of missed calls or slow response time?", 
+        options: ['Yes, frequently', 'Sometimes', 'Rarely', 'Not sure'], 
+        required: true 
+      },
+      { 
+        id: 'urgency', 
+        type: 'radio', 
+        label: "On a scale of 1-10, how important is it for you to fix that problem now?", 
+        options: ['9-10 (Critical)', '7-8 (High)', '4-6 (Moderate)', '1-3 (Low)'], 
+        required: true 
+      },
+      { 
+        id: 'problemCost', 
+        type: 'select', 
+        label: "What do you think it's costing you (in time, money, or energy) to not have that problem solved?", 
+        required: true,
+        options: [
+          'Thousands of dollars per month in lost revenue',
+          'Hundreds of dollars per month',
+          'Significant time (10+ hours per week)',
+          'Moderate time (5-10 hours per week)',
+          'High stress and burnout',
+          'Missed growth opportunities',
+          'Other'
+        ]
+      },
+    ],
+    // Stage 2: Desired Outcomes
+    [
+      { 
+        id: 'successVision', 
+        type: 'select', 
+        label: "What would success look like for you in the next 3-6 months?", 
+        required: true,
+        options: [
+          '2x more leads and customers',
+          '50% more revenue',
+          'Fully automated lead follow-up',
+          'More time to focus on growth',
+          'Consistent 5-star reviews',
+          'Professional online presence',
+          'Streamlined operations',
+          'Other'
+        ]
+      },
+      { 
+        id: 'successMetrics', 
+        type: 'checkbox', 
+        label: "How would you measure success?", 
+        options: ['More calls/inquiries', 'Higher close rate', 'More automation', 'Better online presence', 'Happier customers'], 
+        required: true 
+      },
+      { 
+        id: 'timeline', 
+        type: 'radio', 
+        label: "How soon would you like to see results or changes?", 
+        options: ['Within 1 month', '1-3 months', '3-6 months', '6+ months'], 
+        required: true 
+      },
+    ],
+    // Stage 3: Resources & Constraints
+    [
+      { 
+        id: 'budget', 
+        type: 'radio', 
+        label: "What's your comfortable investment range for solving this problem?", 
+        options: ['$500 - $1,000', '$1,000 - $2,500', '$2,500 - $5,000', '$5,000+'], 
+        required: true 
+      },
+      { 
+        id: 'decisionMaker', 
+        type: 'radio', 
+        label: "Are you the final decision-maker for this investment?", 
+        options: ['Yes, I can decide now', 'I need to involve others', 'I need approval from someone else'], 
+        required: true 
+      },
+      { 
+        id: 'timelineToDecide', 
+        type: 'radio', 
+        label: "How quickly would you be ready to move forward if you found a solution that fits?", 
+        options: ['Today/This week', 'Within 2 weeks', 'Within a month', 'Just researching'], 
+        required: true 
+      },
+    ],
+    // Stage 4: Solution Mapping
+    [
+      { 
+        id: 'mainNeed', 
+        type: 'checkbox', 
+        label: "What are your main needs? (Select all that apply)", 
+        options: ['More qualified leads', 'Better conversion/follow-up', 'More automation', 'Online visibility (website/branding)', 'Customer engagement'], 
+        required: true 
+      },
+      { 
+        id: 'automationInterest', 
+        type: 'checkbox', 
+        label: "Which automation tools interest you most?", 
+        options: ['AI Receptionist (automated call response)', 'Automated Appointment Booking', 'Lead Nurturing Email Sequences', 'Automated Review Requests', 'Client Onboarding Automation'], 
+        required: true 
+      },
+    ],
+    // Stage 5: Objections
+    [
+      { 
+        id: 'concerns', 
+        type: 'checkbox', 
+        label: "Do you have any concerns before moving forward?", 
+        options: ['Price/Budget', 'Timing', 'Trust/Credibility', 'Technical complexity', 'Risk (what if it doesn\'t work?)', 'No concerns'], 
+        required: false 
+      },
+      { 
+        id: 'additionalQuestions', 
+        type: 'textarea', 
+        label: "What questions do you have before we move forward?", 
+        required: false 
+      },
+    ],
+    // Stage 6: Commitment
+    [
+      { 
+        id: 'readyToMove', 
+        type: 'radio', 
+        label: "Based on everything we've discussed, are you ready to move forward?", 
+        options: ['Yes, let\'s get started today', 'Yes, but I need a proposal first', 'Maybe, I need more time to think', 'Not right now'], 
+        required: true 
+      },
+    ],
+    // Stage 7: Follow-Up
+    [
+      { 
+        id: 'nextSteps', 
+        type: 'radio', 
+        label: "What would be the best next step for you?", 
+        options: ['Schedule onboarding call', 'Receive detailed proposal', 'Schedule follow-up call', 'Receive more information'], 
+        required: true 
+      },
+    ]
+  ]
+
+  const handleAnswer = (questionId, value) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: value
+    }))
+  }
+
+  const handleNext = () => {
+    const stageQuestions = questions[currentStage]
+    if (currentQuestion < stageQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
+    } else if (currentStage < stages.length - 1) {
+      setCurrentStage(currentStage + 1)
+      setCurrentQuestion(0)
+    } else {
+      setShowPackage(true)
+    }
+  }
+
+  const handleBack = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1)
+    } else if (currentStage > 0) {
+      setCurrentStage(currentStage - 1)
+      setCurrentQuestion(questions[currentStage - 1].length - 1)
+    }
+  }
+
+  const getCurrentQuestion = () => {
+    return questions[currentStage][currentQuestion]
+  }
+
+  const isCurrentQuestionAnswered = () => {
+    const question = getCurrentQuestion()
+    if (!question.required) return true
+    const answer = answers[question.id]
+    if (!answer) return false
+    if (Array.isArray(answer)) return answer.length > 0
+    return answer.length > 0
+  }
+
+  const calculateProgress = () => {
+    let totalQuestions = 0
+    let answeredQuestions = 0
+    
+    questions.forEach((stageQuestions, stageIndex) => {
+      stageQuestions.forEach(q => {
+        totalQuestions++
+        const answer = answers[q.id]
+        if (answer && (Array.isArray(answer) ? answer.length > 0 : answer.length > 0)) {
+          answeredQuestions++
+        }
+      })
+    })
+    
+    return (answeredQuestions / totalQuestions) * 100
+  }
+
+  const exportData = () => {
+    const dataStr = JSON.stringify(answers, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `client-data-${answers.businessName || 'export'}.json`
+    link.click()
+  }
+
+  // Show different views based on flow
+  if (currentFlow === 'proposal') {
+    return <ProposalView answers={answers} onBack={() => setCurrentFlow('discovery')} onNext={() => setCurrentFlow('tom')} />
+  }
+
+  if (currentFlow === 'tom') {
+    return <TOMView answers={answers} onBack={() => setCurrentFlow('proposal')} onNext={() => setCurrentFlow('implementation')} />
+  }
+
+  if (currentFlow === 'implementation') {
+    return <ImplementationView answers={answers} onBack={() => setCurrentFlow('tom')} onComplete={() => alert('Implementation complete!')} />
+  }
+
+  if (showPackage) {
+    return <PackageView 
+      answers={answers} 
+      onBack={() => setShowPackage(false)} 
+      onExport={exportData}
+      onContinue={() => setCurrentFlow('proposal')}
+    />
+  }
+
+  const question = getCurrentQuestion()
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Complete Crossover AI</h1>
+          <p className="text-gray-600">Sales Discovery Navigator</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+            <span className="text-sm font-medium text-gray-700">{Math.round(calculateProgress())}%</span>
+          </div>
+          <Progress value={calculateProgress()} className="h-2" />
+        </div>
+
+        {/* Stage Indicators */}
+        <div className="mb-8 overflow-x-auto">
+          <div className="flex gap-2 min-w-max pb-2">
+            {stages.map((stage, index) => (
+              <div
+                key={stage.id}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  index === currentStage
+                    ? 'bg-blue-600 text-white shadow-lg scale-105'
+                    : index < currentStage
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                <span className="text-xl">{stage.icon}</span>
+                <span className="text-sm font-medium whitespace-nowrap">{stage.title}</span>
+                {index < currentStage && <CheckCircle2 className="w-4 h-4" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-3xl">{stages[currentStage].icon}</span>
+              <span>{stages[currentStage].title}</span>
+            </CardTitle>
+            <CardDescription>
+              Question {currentQuestion + 1} of {questions[currentStage].length}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label className="text-lg font-medium mb-4 block">
+                {question.label}
+                {question.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+
+              {question.type === 'select' ? (
+                <div className="space-y-3">
+                  <Select
+                    value={answers[question.id] || ''}
+                    onValueChange={(value) => handleAnswer(question.id, value)}
+                  >
+                    <SelectTrigger className="text-lg">
+                      <SelectValue placeholder="Select an option..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {question.options.map((option, idx) => (
+                        <SelectItem key={idx} value={option} className="text-base">
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {question.allowCustom && answers[question.id]?.includes('Other') && (
+                    <Input
+                      type="text"
+                      value={answers[`${question.id}_custom`] || ''}
+                      onChange={(e) => handleAnswer(`${question.id}_custom`, e.target.value)}
+                      placeholder="Please specify..."
+                      className="text-lg mt-2"
+                    />
+                  )}
+                </div>
+              ) : question.type === 'text' || question.type === 'email' || question.type === 'tel' ? (
+                <Input
+                  type={question.type}
+                  value={answers[question.id] || ''}
+                  onChange={(e) => handleAnswer(question.id, e.target.value)}
+                  placeholder="Type your answer here..."
+                  className="text-lg"
+                />
+              ) : question.type === 'textarea' ? (
+                <Textarea
+                  value={answers[question.id] || ''}
+                  onChange={(e) => handleAnswer(question.id, e.target.value)}
+                  placeholder="Type your answer here..."
+                  rows={4}
+                  className="text-lg"
+                />
+              ) : question.type === 'radio' ? (
+                <RadioGroup
+                  value={answers[question.id] || ''}
+                  onValueChange={(value) => handleAnswer(question.id, value)}
+                >
+                  {question.options.map((option, idx) => (
+                    <div key={idx} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
+                      <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer flex-1 text-base">
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              ) : question.type === 'checkbox' ? (
+                <div className="space-y-2">
+                  {question.options.map((option, idx) => {
+                    const currentAnswers = answers[question.id] || []
+                    const isChecked = currentAnswers.includes(option)
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center space-x-2 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          const newAnswers = isChecked
+                            ? currentAnswers.filter(a => a !== option)
+                            : [...currentAnswers, option]
+                          handleAnswer(question.id, newAnswers)
+                        }}
+                      >
+                        <div className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center">
+                          {isChecked && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                        </div>
+                        <Label className="cursor-pointer flex-1 text-base">{option}</Label>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex gap-4 pt-4">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStage === 0 && currentQuestion === 0}
+                className="flex-1"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <Button
+                onClick={handleNext}
+                disabled={!isCurrentQuestionAnswered()}
+                className="flex-1"
+              >
+                {currentStage === stages.length - 1 && currentQuestion === questions[currentStage].length - 1
+                  ? 'Generate Package'
+                  : 'Next'}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Help Text */}
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <p>💡 Take your time with each question. Your answers help us create the perfect solution for your business.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Package View Component (Updated)
+function PackageView({ answers, onBack, onExport, onContinue }) {
+  const [selectedServices, setSelectedServices] = useState([])
+
+  // Service catalog with pricing
+  const services = [
+    { id: 'w001', name: 'Automated Appointment Booking', price: 500, priority: 'high', description: 'Never miss a booking opportunity' },
+    { id: 'w002', name: 'Lead Nurturing & Education Sequence', price: 600, priority: 'high', description: 'Build trust automatically' },
+    { id: 'w003', name: 'Professional Services Sales Pipeline', price: 800, priority: 'high', description: 'Complete sales management' },
+    { id: 'w004', name: 'Appointment Reminder System', price: 300, priority: 'medium', description: 'Reduce no-shows' },
+    { id: 'w005', name: 'Automated Review Requests', price: 350, priority: 'medium', description: 'Build your reputation' },
+    { id: 'w006', name: 'Proposal & Signature Automation', price: 450, priority: 'medium', description: 'Close deals faster' },
+    { id: 'w007', name: 'Client Onboarding Automation', price: 550, priority: 'medium', description: 'Smooth client start' },
+    { id: 'w008', name: 'Referral Generation System', price: 400, priority: 'low', description: 'Grow through referrals' },
+  ]
+
+  // Auto-select recommended services based on answers
+  useState(() => {
+    const recommended = []
+    
+    if (answers.budget && !answers.budget.includes('$500')) {
+      recommended.push('w001', 'w002', 'w003')
+    } else {
+      recommended.push('w001')
+    }
+
+    if (answers.mainNeed?.includes('Better conversion/follow-up')) {
+      recommended.push('w004', 'w005')
+    }
+    if (answers.automationInterest?.includes('AI Receptionist')) {
+      recommended.push('w001')
+    }
+    if (answers.automationInterest?.includes('Lead Nurturing Email Sequences')) {
+      recommended.push('w002')
+    }
+
+    setSelectedServices([...new Set(recommended)])
+  }, [])
+
+  const toggleService = (serviceId) => {
+    setSelectedServices(prev =>
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    )
+  }
+
+  const calculateTotal = () => {
+    return selectedServices.reduce((total, serviceId) => {
+      const service = services.find(s => s.id === serviceId)
+      return total + (service?.price || 0)
+    }, 0)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-6xl mx-auto py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Custom Package</h1>
+          <p className="text-gray-600">Based on your needs and goals</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {/* Client Summary */}
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle>Client Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div>
+                <p className="font-semibold text-gray-700">Name</p>
+                <p className="text-gray-900">{answers.name}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">Business</p>
+                <p className="text-gray-900">{answers.businessName}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">Industry</p>
+                <p className="text-gray-900">{answers.industry}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">Budget</p>
+                <p className="text-gray-900">{answers.budget}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">Urgency</p>
+                <p className="text-gray-900">{answers.urgency}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Services */}
+          <div className="md:col-span-2 space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900">Select Services</h2>
+            <p className="text-gray-600 mb-4">Click to add or remove services from your package</p>
+            
+            <div className="grid gap-4">
+              {services.map(service => {
+                const isSelected = selectedServices.includes(service.id)
+                return (
+                  <Card
+                    key={service.id}
+                    className={`cursor-pointer transition-all ${
+                      isSelected ? 'border-blue-500 border-2 bg-blue-50' : 'hover:border-gray-400'
+                    }`}
+                    onClick={() => toggleService(service.id)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center">
+                          {isSelected ? <CheckCircle2 className="w-5 h-5 text-blue-600" /> : <Circle className="w-5 h-5 text-gray-400" />}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                          <p className="text-sm text-gray-600">{service.description}</p>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            service.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            service.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {service.priority}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-gray-900">${service.price}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Total and Actions */}
+        <Card className="shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Total Investment</h2>
+                <p className="text-gray-600">One-time setup + ongoing support</p>
+                <p className="text-sm text-gray-500 mt-1">{selectedServices.length} services selected</p>
+              </div>
+              <div className="text-right">
+                <p className="text-5xl font-bold text-blue-600">${calculateTotal()}</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <Button variant="outline" onClick={onBack} className="flex-1">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Questions
+              </Button>
+              <Button onClick={onExport} variant="outline" className="flex-1">
+                <Download className="w-4 h-4 mr-2" />
+                Export Client Data
+              </Button>
+              <Button onClick={onContinue} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Continue to Proposal
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+// NEW: Proposal View Component
+function ProposalView({ answers, onBack, onNext }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="text-center mb-8">
+          <FileText className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Proposal Stage</h1>
+          <p className="text-gray-600">Review and finalize your custom proposal</p>
+        </div>
+
+        <Card className="shadow-xl mb-6">
+          <CardHeader>
+            <CardTitle>Proposal Details</CardTitle>
+            <CardDescription>Your customized service package</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-lg mb-2">Next Steps:</h3>
+              <ul className="space-y-2 text-gray-700">
+                <li className="flex items-start gap-2">
+                  <CheckSquare className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <span>Review the proposed services and pricing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckSquare className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <span>Generate PDF proposal document</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckSquare className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <span>Send proposal to client email</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckSquare className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <span>Schedule Technical Onboarding Meeting (TOM)</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button variant="outline" onClick={onBack} className="flex-1">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Package
+              </Button>
+              <Button onClick={onNext} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Continue to TOM
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+// NEW: TOM (Technical Onboarding Meeting) View Component
+function TOMView({ answers, onBack, onNext }) {
+  const [setupStatus, setSetupStatus] = useState({})
+  const [isAutomating, setIsAutomating] = useState(false)
+
+  const setupSteps = [
+    { id: 'ghl-contact', name: 'Create GHL Contact', automated: true },
+    { id: 'ghl-opportunity', name: 'Create Opportunity/Deal', automated: true },
+    { id: 'ghl-tags', name: 'Add Service Tags', automated: true },
+    { id: 'ghl-calendar', name: 'Schedule Onboarding Call', automated: true },
+    { id: 'ghl-workflow', name: 'Setup Automation Workflows', automated: false },
+    { id: 'ghl-integrations', name: 'Configure Integrations', automated: false },
+  ]
+
+  const attemptAutomation = async () => {
+    setIsAutomating(true)
+    
+    for (const step of setupSteps) {
+      if (step.automated) {
+        setSetupStatus(prev => ({ ...prev, [step.id]: 'loading' }))
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // Randomly succeed or fail for demo
+        const success = Math.random() > 0.3
+        setSetupStatus(prev => ({ ...prev, [step.id]: success ? 'success' : 'failed' }))
+      }
+    }
+    
+    setIsAutomating(false)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="text-center mb-8">
+          <Wrench className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Technical Onboarding Meeting (TOM)</h1>
+          <p className="text-gray-600">Setup and configuration</p>
+        </div>
+
+        <Card className="shadow-xl mb-6">
+          <CardHeader>
+            <CardTitle>GoHighLevel Setup</CardTitle>
+            <CardDescription>Automated setup with manual fallback instructions</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={attemptAutomation} 
+              disabled={isAutomating}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {isAutomating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Automating Setup...
+                </>
+              ) : (
+                <>
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Start Automated Setup
+                </>
+              )}
+            </Button>
+
+            <div className="space-y-3 mt-6">
+              {setupSteps.map(step => {
+                const status = setupStatus[step.id]
+                return (
+                  <div key={step.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {status === 'loading' && <Loader2 className="w-5 h-5 animate-spin text-blue-600" />}
+                      {status === 'success' && <CheckCircle2 className="w-5 h-5 text-green-600" />}
+                      {status === 'failed' && <AlertCircle className="w-5 h-5 text-red-600" />}
+                      {!status && <Circle className="w-5 h-5 text-gray-400" />}
+                      <div>
+                        <p className="font-semibold text-gray-900">{step.name}</p>
+                        <p className="text-sm text-gray-600">
+                          {step.automated ? 'Automated via MCP' : 'Manual setup required'}
+                        </p>
+                      </div>
+                    </div>
+                    {status === 'failed' && (
+                      <Button variant="outline" size="sm">
+                        View Manual Steps
+                      </Button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button variant="outline" onClick={onBack} className="flex-1">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Proposal
+              </Button>
+              <Button onClick={onNext} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Continue to Implementation
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+// NEW: Implementation View Component
+function ImplementationView({ answers, onBack, onComplete }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="text-center mb-8">
+          <Rocket className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Implementation Stage</h1>
+          <p className="text-gray-600">Service activation and go-live</p>
+        </div>
+
+        <Card className="shadow-xl mb-6">
+          <CardHeader>
+            <CardTitle>Implementation Checklist</CardTitle>
+            <CardDescription>Track your progress to go-live</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {[
+                'Test all automation workflows',
+                'Verify integrations are working',
+                'Train team members on new systems',
+                'Set up monitoring and alerts',
+                'Schedule follow-up review call',
+                'Go live with new services'
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <CheckSquare className="w-5 h-5 text-blue-600" />
+                  <span className="text-gray-900">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button variant="outline" onClick={onBack} className="flex-1">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to TOM
+              </Button>
+              <Button onClick={onComplete} className="flex-1 bg-green-600 hover:bg-green-700">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Complete Implementation
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+export default App
+
