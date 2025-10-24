@@ -5,11 +5,14 @@ const fs = require('fs');
 const Stripe = require('stripe');
 
 const app = express();
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from dist directory
+app.use(express.static('dist'));
 
 // Stripe configuration
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -494,6 +497,11 @@ app.post('/api/mcp/process-payment', async (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// SPA catch-all route - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/dist/index.html');
 });
 
 // Start server

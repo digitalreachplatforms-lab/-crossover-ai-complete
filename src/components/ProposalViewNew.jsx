@@ -539,8 +539,11 @@ export function ProposalViewNew({ selectedServices = [], services = [], answers 
                     
                     console.log('MCP Payload:', payload)
                     
-                    // TODO: Send to /api/mcp/process-payment
-                    const response = await fetch('https://3003-iq1yxz751hiqa4mb803dm-55af00c0.manusvm.computer/api/mcp/process-payment', {
+                    // Send to payment API endpoint
+                    // On Render, both servers run on the same machine, so localhost:3003 works
+                    // For local dev, use the exposed URL
+                    const apiUrl = import.meta.env.VITE_PAYMENT_API_URL || '/api/mcp/process-payment'
+                    const response = await fetch(apiUrl, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(payload)
