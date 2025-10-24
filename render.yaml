@@ -1,0 +1,24 @@
+services:
+  # Frontend - Static Site
+  - type: web
+    name: crossover-ai-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    
+  # Backend - Payment Server
+  - type: web
+    name: crossover-ai-payment-server
+    env: node
+    buildCommand: npm install
+    startCommand: node payment-server.cjs
+    envVars:
+      - key: PORT
+        value: 3003
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: GHL_LOCATION_ID
+        value: 8638XsFdyiVBjZfl35Kv
+      - key: GHL_API_KEY
+        sync: false
+

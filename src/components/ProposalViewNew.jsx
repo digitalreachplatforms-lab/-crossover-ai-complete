@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card.jsx'
 import { Checkbox } from '@/components/ui/checkbox.jsx'
 import { Slider } from '@/components/ui/slider.jsx'
-import { FileText, FileSignature, CheckCircle2, DollarSign, Download } from 'lucide-react'
+import { FileText, FileSignature, CheckCircle2, DollarSign, Download, Loader2 } from 'lucide-react'
 import { StripePaymentForm } from './StripePaymentForm.jsx'
 
 const OHIO_TAX_RATE = 0.0575
 
 // Initialize Stripe
-const stripePromise = loadStripe('pk_test_51SKkfCJvt1ZyezmhJEzx9fSd9KNMbMooMC1Jlbrpx9sKHXbTUOmWGB0wChQ8INb41x7Gw9VFgvvR2u5WEQiGx61V008Q8RAvwD')
+const stripePromise = loadStripe('pk_live_51SKkfCJvt1ZyezmhasffrG4ou59z3yoHLZOOv2GfZ4Jtf6YXB8XJ3niC1oKHuYsgwgcVMq5h8R0bNJ35KOkKsQ8q00oG7Q8sZp')
 
 export function ProposalViewNew({ selectedServices = [], services = [], answers = {}, onBack, onNext }) {
   const [discount, setDiscount] = useState(0)
@@ -21,6 +21,8 @@ export function ProposalViewNew({ selectedServices = [], services = [], answers 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [paymentMethodId, setPaymentMethodId] = useState(null)
   const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
   const signaturePadRef = useRef(null)
   const canvasRef = useRef(null)
   
@@ -538,27 +540,47 @@ export function ProposalViewNew({ selectedServices = [], services = [], answers 
                     console.log('MCP Payload:', payload)
                     
                     // TODO: Send to /api/mcp/process-payment
-                    const response = await fetch('/api/mcp/process-payment', {
+                    const response = await fetch('https://3003-iq1yxz751hiqa4mb803dm-55af00c0.manusvm.computer/api/mcp/process-payment', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(payload)
                     })
                     
+                    setIsProcessingPayment(true)
+                    
                     if (response.ok) {
+                      setPaymentSuccess(true)
                       alert('Payment processed and account created successfully!')
-                      onNext()
+                      setTimeout(() => onNext(), 2000)
                     } else {
                       throw new Error('Payment processing failed')
                     }
                   } catch (error) {
                     console.error('MCP Error:', error)
                     alert('Error processing payment: ' + error.message)
+                  } finally {
+                    setIsProcessingPayment(false)
                   }
                 }}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-8 text-xl font-bold shadow-2xl"
+                disabled={isProcessingPayment || paymentSuccess}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-8 text-xl font-bold shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckCircle2 className="w-6 h-6 mr-3" />
-                Process Payment & Create Account
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+                    Processing Payment...
+                  </>
+                ) : paymentSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-6 h-6 mr-3" />
+                    Payment Successful!
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-6 h-6 mr-3" />
+                    Process Payment & Create Account
+                  </>
+                )}
               </Button>
               <p className="text-center text-sm text-gray-600 mt-4">
                 This will charge ${totalDueToday.toFixed(2)} today and set up recurring billing of ${monthlyRecurring.toFixed(2)}/month
@@ -591,15 +613,13 @@ export function ProposalViewNew({ selectedServices = [], services = [], answers 
               </>
             )}
           </Button>
-          {!paymentMethodId && (
-            <Button
-              onClick={onNext}
-              disabled={!clientSignature}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Continue to Asset Gathering →
-            </Button>
-          )}
+          <Button
+            onClick={onNext}
+            disabled={!clientSignature}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Continue to Asset Gathering →
+          </Button>
         </div>
       </div>
     </div>

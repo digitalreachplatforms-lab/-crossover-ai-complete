@@ -824,9 +824,9 @@ function PackageView({ answers, onBack, onExport, onContinue, setSelectedService
       id: 'rectest', 
       name: '🧪 RecTest Package', 
       setupFee: 2,
-      monthlyFee: 5, 
+      monthlyFee: 3, 
       priority: 'test', 
-      description: 'Test package for payment processing ($2 setup + $5/month recurring)',
+      description: 'Test package for payment processing ($2 setup + $3/month recurring)',
       reason: 'test the complete payment and account creation workflow',
       isTestPackage: true,
       ghlSubAccount: 'crossoveraix',
@@ -834,7 +834,7 @@ function PackageView({ answers, onBack, onExport, onContinue, setSelectedService
       billingSchedule: {
         setupImmediate: true,
         recurringDelay: '24h',
-        recurringAmount: 5
+        recurringAmount: 3
       }
     },
   ]
@@ -967,7 +967,7 @@ function PackageView({ answers, onBack, onExport, onContinue, setSelectedService
                 }}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all"
               >
-                🧪 Test Package ($2 Setup + $5/month)
+                🧪 Test Package ($2 Setup + $3/month)
               </Button>
             </div>
             
