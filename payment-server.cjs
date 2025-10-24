@@ -12,10 +12,10 @@ app.use(cors());
 app.use(express.json());
 
 // Stripe configuration
-const STRIPE_SECRET_KEY = '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';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = Stripe(STRIPE_SECRET_KEY);
-const GHL_LOCATION_ID = '8638XsFdyiVBjZfl35Kv';
-const GHL_API_KEY = 'pit-5e66aa15-7203-4025-b94c-2d4e18a84ed3';
+const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID;
+const GHL_API_KEY = process.env.GHL_API_KEY;
 const GHL_ONBOARDING_PIPELINE_ID = 'lWqPrn6RK2eURjtOZWdN';
 const GHL_PAID_INVOICE_STAGE_ID = 'ec0de481-33e5-4c67-b47c-d4d0e5a5a730';
 
